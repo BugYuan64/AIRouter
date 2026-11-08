@@ -1,0 +1,38 @@
+# Local credentials and runtime state
+.env
+.env.*
+!.env.example
+!.env.container.example
+.local/
+clients.json
+clients.local.json
+*.key
+*.pem
+*.log
+*.db
+*.db-*
+
+# Generated artifacts
+/bin/
+/dist/
+/coverage.out
+*.test
+*.exe
+__pycache__/
+.superpowers/
+
+# 前端依赖与构建产物（构建产物由 web/ 生成后嵌入 Go）
+node_modules/
+internal/admin/dist/*
+!internal/admin/dist/.keep
+web/dist/
+web/tsconfig.tsbuildinfo
+
+# 容器部署本地状态
+/pgdata/
+
+# 设计、计划与部署记录只保留在本地，不随仓库发布
+/docs/
+/阶段步骤实现.md
+/项目最终架构.md
+/live-check.json

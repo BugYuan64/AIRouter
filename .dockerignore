@@ -1,0 +1,14 @@
+# 构建上下文排除：本地数据、密钥与前端依赖
+pgdata
+.env
+.env.*
+!.env.container.example
+.git
+node_modules
+web/node_modules
+internal/admin/dist
+辅助脚本
+docs/superpowers
+*.exe
+*.key
+*.pem

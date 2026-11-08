@@ -1,0 +1,95 @@
+# AIRouter 部署编排。
+#
+# 与 CPA 的关系：只通过外部网络 cpa-net 访问 CPA，
+# 不修改 CPA 的 compose 文件、容器或配置。
+#
+# 安全边界：
+#   - 数据库不发布端口，只在内部网络可见
+#   - 网关端口只绑定回环，由宿主机上的 Caddy 反代
+#   - 密码经 .env 注入，不写入镜像或仓库
+
+services:
+  airouter:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: airouter:local
+    container_name: airouter
+    restart: unless-stopped
+    depends_on:
+      airouter-db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      # 容器内不能用 127.0.0.1 访问宿主机；必须走 Docker 网络别名
+      CPA_BASE_URL: http://cpa:8317
+      # CPA 数据面 Key：与网关 Key、管理 Key 三者互不复用
+      CPA_API_KEY: ${CPA_API_KEY}
+      # 单端口：数据面与控制台合并在同一进程同一端口
+      AIROUTER_LISTEN_ADDR: 0.0.0.0:8080
+      AIROUTER_DATABASE_URL: postgres://airouter:${POSTGRES_PASSWORD}@airouter-db:5432/airouter?sslmode=disable
+    ports:
+      # 只发布到宿主机回环，公网访问必须经 Caddy
+      - "127.0.0.1:8080:8080"
+    networks:
+      - cpa-net
+      - airouter-net
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  airouter-db:
+    image: postgres:17-alpine
+    container_name: airouter-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: airouter
+      POSTGRES_USER: airouter
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # 与容器时区一致，避免日聚合错位
+      TZ: Asia/Shanghai
+    # 内存参数必须显式下调：宿主机无 swap，默认配置会与 CPA 争抢导致 OOM
+    command:
+      - postgres
+      - -c
+      - shared_buffers=96MB
+      - -c
+      - max_connections=40
+      - -c
+      - work_mem=4MB
+      - -c
+      - effective_cache_size=256MB
+      - -c
+      - log_min_duration_statement=2000
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airouter -d airouter"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks:
+      - airouter-net
+    # 不发布端口：数据库只在内部网络可达
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  # CPA 现有网络（compose 项目名 cliproxyapi），已存在
+  cpa-net:
+    external: true
+    name: cliproxyapi_default
+  # 内部网络：internal 表示不能访问外网，也禁止外部直接连入
+  airouter-net:
+    internal: true

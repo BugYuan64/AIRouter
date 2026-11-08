@@ -1,0 +1,142 @@
+/* 设计令牌：参考 hyrup.de 的版式语言，但深色面改为柔和石板色系。
+   原稿使用 #070323（近黑蓝），在白底上对比过于跳脱；
+   现以带蓝调的深石板 #1b1b2f 为主，并降低面板与页面的明度落差。 */
+@theme {
+  --color-ink: #17172b;
+  --color-ink-soft: #1f1f36;
+  --color-ink-line: #2f2f49;
+  /* 浅色强调面：与白底区分但不产生强对比 */
+  --color-surface: #f2f4f9;
+  --color-surface-line: #dfe3ee;
+  --color-accent: #3b82f6;
+  --color-accent-alt: #6366f1;
+  --color-paper: #ffffff;
+  --color-paper-alt: #f7f8fa;
+  --color-line: #e6e8ee;
+  --color-muted: #6a7080;
+
+  --font-sans: Inter, "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", Consolas, "Fragment Mono", monospace;
+
+  --radius-card: 8px;
+}
+
+/* 仅引 theme + utilities，不引 preflight：preflight 的
+   `* { border-width: 0 }` 与 `button { background: transparent }`
+   会破坏 Element Plus 的边框与按钮样式。 */
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+/* Element Plus 必须排在 Tailwind 之后，避免工具类被组件样式覆盖 */
+@import "element-plus/dist/index.css";
+
+:root {
+  /* Element Plus 主题对齐设计令牌 */
+  --el-color-primary: #3b82f6;
+  --el-color-primary-light-3: #6ba1f8;
+  --el-color-primary-light-5: #9dc0fb;
+  --el-color-primary-light-7: #cbddfd;
+  --el-color-primary-light-8: #dde9fe;
+  --el-color-primary-light-9: #eef4ff;
+  --el-color-primary-dark-2: #2f68c5;
+  --el-text-color-primary: #17172b;
+  --el-text-color-regular: #33384a;
+  --el-border-color: #e6e8ee;
+  --el-border-radius-base: 8px;
+  --el-font-family: Inter, "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+/* 极轻字重是该版式语言的核心特征，勿改成 bold。
+   行高 0.9 来自参考站的拉丁文排版；CJK 字形有完整 em 框，
+   直接套用会行间压字，故中文用 1.06 并保留中英混排时的紧凑感。 */
+.display {
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-weight: 400;
+  line-height: 1.06;
+  letter-spacing: -0.01em;
+}
+
+.display-sm {
+  font-size: clamp(1.75rem, 3.4vw, 2.75rem);
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+/* 关闭 preflight 后必须自行重置列表默认样式。
+   注意：只重置 ul/ol，不重置 h1-h6/p 的 margin——否则 Tailwind
+   的 mt-* 工具类会被此处覆盖，段落间距失效。 */
+ul,
+ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* 小写标签，配合大标题成对出现 */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.eyebrow-accent {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 深色大卡片：该站最显著的构图手法 */
+/* 浅色强调面板：替代此前的深色大块。
+   深色面板在白色页面上对比过强，用户反馈突兀；
+   改用带蓝调的浅灰底 + 细边框，保持分区感而不刺眼。 */
+.surface-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-surface-line);
+  border-radius: 10px;
+}
+
+/* 滚动进场动画 */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
